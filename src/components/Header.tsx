@@ -36,7 +36,7 @@ export default function Header()
     useEffect(() => {
         const buscarUsuario = async () => {
             try{
-                const response = await axios.get(`https://localhost:7227/api/${id}`);
+                const response = await axios.get(`http://localhost:5053/api/${id}`);
                 setUsuario(response.data);
             }
             catch(error){

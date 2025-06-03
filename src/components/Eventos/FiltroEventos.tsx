@@ -1,4 +1,4 @@
-import '../../css/EventosFiltros.css'
+import '../../css/Evento/EventosFiltros.css'
 interface FiltroEventoProps{
     closeModal: () => void; 
 }

@@ -123,7 +123,7 @@ export default function AgenciaAreaNova()
         <>
         {loading && (
             <div className="loading-container">
-                <span>Carregando dados...</span>
+                <span>Carregando...</span>
                 <MoonLoader color="#000" size={70}/>
             </div>
             )}

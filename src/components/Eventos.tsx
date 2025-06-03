@@ -1,135 +1,180 @@
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { CalendarDays, Ticket, Layers, TicketPercent } from "lucide-react";
+import { MoonLoader } from "react-spinners";
+
 import Header from "./Header";
-import '../css/Eventos.css';
-import { CalendarDays, Ticket, Layers, Plus } from 'lucide-react';
 import EventosTable from "./Eventos/EventosTable";
-import { useState } from "react";
 import EventosTableExpandido from "./Eventos/EventosExpandido";
 import FiltroEvento from "./Eventos/FiltroEventos";
-export default function Eventos(){
+import Ingressos from "./Ingressos/Ingressos";
+import Lotes from "./Lotes/Lotes";
 
-    const [modalAberto, setModalAberto] = useState(false);
-    const [modalFiltroAberto, setModalFiltroAberto] = useState(false);
-    const eventos = [
-  {
-    id: "1",
-    agenciaId: "a1",
-    nome: "Festival de Verão",
-    descricao: "Festival com várias atrações musicais e gastronômicas.",
-    local: "Praia Central",
-    dia: "2025-12-15",
-    horarioInicio: "2025-12-15T16:00:00",
-    horarioTermino: "2025-12-15T23:00:00",
-    bannerImagem: "banner1.jpg",
-    capacidadeMaxima: 5000,
-    status: true,
-    faixaEtaria: 18,
-    tipoEvento: "Festival",
-    emailSuporte: "suporte@verao.com",
-    telefoneSuporte: "(11) 99999-8888"
-  },
-  {
-    id: "2",
-    agenciaId: "a1",
-    nome: "Feira de Startups",
-    descricao: "Evento para networking entre startups e investidores.",
-    local: "Centro de Convenções",
-    dia: "2025-10-05",
-    horarioInicio: "2025-10-05T09:00:00",
-    horarioTermino: "2025-10-05T17:00:00",
-    bannerImagem: "banner2.jpg",
-    capacidadeMaxima: 1000,
+import { buscarInfoUsuarioAgencia } from "../services/agenciaService";
+import { buscarEventosPorEmpresa } from "../services/eventoService";
+import { buscarTodosTiposIngressos } from "../services/tiposIngressosServices";
+import { buscarTodosLotes } from "../services/loteService";
+
+import type { Evento } from "../models/Eventos/Eventos";
+import type { IngressosModel } from "../models/Ingressos/IngressosModelo";
+import type { Lote } from "../models/Lotes/Lotes";
+
+import "../css/Evento/Eventos.css";
+import LinkVenda from "./LinkVenda/LinkVenda";
+import type { LinkVendas } from "../models/LinkVenda/LinkVenda";
+import { buscarLinkVendas } from "../services/linkVendaService";
+
+export default function Eventos() {
+  const { id } = useParams();
+
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [tipoIngressos, setTipoIngressos] = useState<IngressosModel[]>([]);
+  const [lotesSetados, setLotes] = useState<Lote[]>([])
+  const [eventoSelecionado, setEventoSelecionado] = useState<Evento | null>(null);
+  const [linkVenda, setLinkVendas] = useState<LinkVendas[]>([])
+  const [modalAberto, setModalAberto] = useState(false);
+  const [modalFiltroAberto, setModalFiltroAberto] = useState(false);
+  const [abaSelecionada, setAbaSelecionada] = useState<"evento" | "lote" | "ingresso" | "linkVendas">("evento");
+
+  const eventoPadrao: Evento = {
+    id: "",
+    agenciaId: "",
+    nome: "Erro",
+    descricao: "",
+    local: "",
+    diaEvento: "",
+    horarioInicio: "",
+    horarioTermino: "",
+    bannerImagem: "",
+    capacidadeMaxima: 0,
     status: false,
-    faixaEtaria: 16,
-    tipoEvento: "Feira",
-    emailSuporte: "contato@startupfair.com",
-    telefoneSuporte: "(21) 98888-7777"
-  },
-  {
-    id: "3",
-    agenciaId: "a1",
-    nome: "Show de Rock",
-    descricao: "Show com bandas nacionais e internacionais.",
-    local: "Estádio Municipal",
-    dia: "2025-11-20",
-    horarioInicio: "2025-11-20T19:00:00",
-    horarioTermino: "2025-11-21T01:00:00",
-    bannerImagem: "banner3.jpg",
-    capacidadeMaxima: 10000,
-    status: true,
-    faixaEtaria: 14,
-    tipoEvento: "Show",
-    emailSuporte: "rock@eventos.com",
-    telefoneSuporte: "(31) 97777-6666"
-  },
-  
-];
-let eventoSelecionado =   {
-    id: "3",
-    agenciaId: "a1",
-    nome: "Show de Rock",
-    descricao: "Show com bandas nacionais e internacionais.",
-    local: "Estádio Municipal",
-    dia: "2025-11-20",
-    horarioInicio: "2025-11-20T19:00:00",
-    horarioTermino: "2025-11-21T01:00:00",
-    bannerImagem: "banner3.jpg",
-    capacidadeMaxima: 10000,
-    status: true,
-    faixaEtaria: 14,
-    tipoEvento: "Show",
-    emailSuporte: "rock@eventos.com",
-    telefoneSuporte: "(31) 97777-6666"
-  }
-  function expandir(){
-    setModalAberto(true);
-  }
-  function fecharModal()
-  {
-    setModalAberto(false)
+    faixaEtaria: 0,
+    tipoEvento: "",
+    emailSuporte: "",
+    telefoneSuporte: ""
+  };
+
+  async function carregarDados(idUsuario: string) {
+    try {
+      const agencia = await buscarInfoUsuarioAgencia(idUsuario);
+      const [eventos, tiposIngressos, lotes, linkVendas] = await Promise.all([
+        buscarEventosPorEmpresa(agencia.agenciaId),
+        buscarTodosTiposIngressos(agencia.agenciaId),
+        buscarTodosLotes(agencia.agenciaId),
+        buscarLinkVendas(agencia.agenciaId)
+      ]);
+
+      setEventos(eventos);
+      setTipoIngressos(tiposIngressos);
+      setLotes(lotes);
+      setLinkVendas(linkVendas)
+
+      console.log("Eventos:", eventos);
+      console.log("Ingressos:", tiposIngressos);
+      console.log("Lotes:", lotesSetados);
+      console.log("Link Vendas:", linkVenda)
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    }
   }
 
-  function abrirFiltro()
-  {
-    setModalFiltroAberto(true)
+  useEffect(() => {
+    if (id) {
+      carregarDados(id);
+    }
+  }, [id]);
+
+  function expandir(idEvento: string) {
+    const evento = eventos.find(e => e.id === idEvento);
+    if (evento) {
+      setEventoSelecionado(evento);
+      setModalAberto(true);
+    }
   }
 
-  function fecharFiltro()
-  {
-    setModalFiltroAberto(false)
-  }
-    return(
-        <div className="container-eventos">
-            <div className="container-infos">
-                <div className="btn-opcoes">
-                <button className="botao-claro">
-                    <CalendarDays />
-                    Eventos
-                </button>
-
-                <button className="botao-claro">
-                    <Layers />
-                    Lotes
-                </button>
-
-                <button className="botao-claro">
-                    <Ticket />
-                    Ingressos
-                </button>
-                </div>
-            </div>
-            <div className="container-eventos-table">
-                <EventosTable 
-                eventos={eventos}
-                expandir={expandir}
-                filtro={abrirFiltro}/>
-                {
-                    modalAberto && <EventosTableExpandido evento={eventoSelecionado} closeModal={fecharModal}/>
-                }
-                {
-                    modalFiltroAberto && <FiltroEvento closeModal={fecharFiltro} />
-                }
-
-            </div>
+  return (
+    <div className="container-eventos">
+      <div className="container-infos">
+        <div className="btn-opcoes">
+          <BotaoAba
+            selecionado={abaSelecionada === "evento"}
+            onClick={() => setAbaSelecionada("evento")}
+            icone={<CalendarDays />}
+            texto="Eventos"
+          />
+          <BotaoAba
+            selecionado={abaSelecionada === "lote"}
+            onClick={() => setAbaSelecionada("lote")}
+            icone={<Layers />}
+            texto="Lotes"
+          />
+          <BotaoAba
+            selecionado={abaSelecionada === "ingresso"}
+            onClick={() => setAbaSelecionada("ingresso")}
+            icone={<Ticket />}
+            texto="Ingressos"
+          />
+          <BotaoAba
+            selecionado={abaSelecionada === "linkVendas"}
+            onClick={() => setAbaSelecionada("linkVendas")}
+            icone={<TicketPercent />}
+            texto="Link Vendas"
+          />
         </div>
-    )
+      </div>
+
+      {/* Abas */}
+      {abaSelecionada === "evento" && (
+        <div className="container-eventos-table">
+           
+            <EventosTable eventos={eventos} expandir={expandir} filtro={() => setModalFiltroAberto(true)} />
+
+          {modalAberto && (
+            <EventosTableExpandido
+              evento={eventoSelecionado?.id ? eventoSelecionado : eventoPadrao}
+              closeModal={() => setModalAberto(false)}
+            />
+          )}
+
+          {modalFiltroAberto && <FiltroEvento closeModal={() => setModalFiltroAberto(false)} />}
+        </div>
+      )}
+
+      {abaSelecionada === "ingresso" && <Ingressos tiposIngressos={tipoIngressos} />}
+      {abaSelecionada === "lote" && <Lotes lotes={lotesSetados} />}
+      {abaSelecionada === "linkVendas" && <LinkVenda linkVenda={linkVenda}/>}
+    </div>
+  );
+}
+
+
+function BotaoAba({
+  selecionado,
+  onClick,
+  icone,
+  texto
+}: {
+  selecionado: boolean;
+  onClick: () => void;
+  icone: React.ReactNode;
+  texto: string;
+}) {
+  return (
+    <button className={`botao-claro ${selecionado ? "selected" : ""}`} onClick={onClick}>
+      {icone}
+      {texto}
+    </button>
+  );
+}
+
+// ----------------------
+// COMPONENTE DE LOADING
+// ----------------------
+function Loading({ mensagem }: { mensagem: string }) {
+  return (
+    <div className="loading-container">
+      <span>{mensagem}</span>
+      <MoonLoader color="#000" size={70} />
+    </div>
+  );
 }

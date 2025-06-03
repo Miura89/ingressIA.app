@@ -1,10 +1,11 @@
 import type { Evento } from "../../models/Eventos/Eventos"
-import {  Plus, Trash, Pencil, Filter} from 'lucide-react';
+import {  Plus, Trash, Pencil, Filter, RefreshCcw} from 'lucide-react';
 import formalizarStatus from "../../utils/funcoes";
 import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 interface EventosTableProps{
     eventos: Evento[]
-    expandir: () => void;
+    expandir: (id: string) => void;
     filtro: () => void;
 }
 export default function EventosTable({eventos, expandir, filtro}: EventosTableProps){
@@ -17,7 +18,14 @@ export default function EventosTable({eventos, expandir, filtro}: EventosTablePr
     (paginaAtual - 1) * itensPorPagina,
     paginaAtual * itensPorPagina
     );
-
+    const navigate = useNavigate()
+    const {id} = useParams();
+    console.log(eventos)
+    function navegarCriar()
+    {
+      console.log("indo")
+      navigate(`/evento/criar/${id}`)
+    }
     return(<>
      <table>
                   <thead>
@@ -27,29 +35,52 @@ export default function EventosTable({eventos, expandir, filtro}: EventosTablePr
                       <th>Dia</th>
                       <th>Status</th>
                       <th>Ações</th>
-                      <th><button className="btn-criar-evento"><Plus size={15}/> Novo Evento</button></th>
-                      <th><button className="btn-criar-evento expandir" onClick={filtro}><Filter size={15}/>Filtrar</button></th>
+                      <div className="container-btn-table-eventos">
+                        <button className="btn-criar-evento" onClick={navegarCriar}><Plus size={15}/> Novo</button>
+                        <button className="btn-criar-evento expandir" onClick={filtro}><Filter size={15}/>Filtrar </button>
+                        {/* <button className="btn-criar-evento expandir"><RefreshCcw size={15}/> Atualizar</button> */}
+                      </div>
                     </tr>
                   </thead>
                   <tbody>
-                    {eventos.map((evento) => (
-                      <tr key={evento.id}>
-                        <td>{evento.nome ?? ''}</td>
-                        <td>{evento.descricao ?? ''}</td>
-                        <td>{evento.dia ?? ''}</td>
-                        <td>{formalizarStatus(evento.status) ?? ''}</td>
-                        <td>
-                          <button className="btn-acao editar" title="Editar"><Pencil size={15}/></button>
-                          <button className="btn-acao excluir" title="Excluir"><Trash size={15}/></button>
-                          <button className="btn-acao expandir" onClick={expandir}>Expandir</button>
+                    {eventos.length <= 0 ? (
+                      <tr>
+                        <td colSpan={7}>
+                          <div style={{ textAlign: 'center', padding: '10px' }}>
+                            Nenhum evento encontrado
+                          </div>
                         </td>
-                        <td></td>
-                        <td></td>
                       </tr>
-                    ))}
+                    ) : (
+                      eventos.map((evento) => (
+                        <tr key={evento.id}>
+                          <td>{evento.nome ?? ''}</td>
+                          <td>{evento.descricao ?? ''}</td>
+                          <td>
+                            {evento.diaEvento 
+                              ? new Intl.DateTimeFormat('pt-BR').format(new Date(evento.diaEvento)) 
+                              : ''}
+                          </td>
+                          <td>{formalizarStatus(evento.status) ?? ''}</td>
+                          <td>
+                            <button className="btn-acao editar" title="Editar">
+                              <Pencil size={15} />
+                            </button>
+                            <button className="btn-acao excluir" title="Excluir">
+                              <Trash size={15} />
+                            </button>
+                            <button className="btn-acao expandir" onClick={() => expandir(evento.id)}>
+                              Expandir
+                            </button>
+                          </td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
-        <div className="paginacao">
+        {/* <div className="paginacao">
                 <button
                     disabled={paginaAtual === 1}
                     onClick={() => setPaginaAtual(paginaAtual - 1)}
@@ -65,7 +96,7 @@ export default function EventosTable({eventos, expandir, filtro}: EventosTablePr
                 >
                     Próxima
                 </button>
-                </div>
+                </div> */}
     </>
     )
 }

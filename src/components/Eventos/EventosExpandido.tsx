@@ -1,5 +1,5 @@
 import type { Evento } from "../../models/Eventos/Eventos";
-import '../../css/ModalEventoExpandido.css'
+import '../../css/Evento/ModalEventoExpandido.css'
 import formalizarStatus from "../../utils/funcoes";
 interface EventosExpandidoTableProps {
   evento: Evento;
@@ -17,7 +17,7 @@ export default function EventosTableExpandido({ evento, closeModal }: EventosExp
     <div className="modal-body">
       <p><strong>Descrição</strong>{evento.descricao}</p>
       <p><strong>Local</strong>{evento.local}</p>
-      <p><strong>Data</strong>{new Date(evento.dia).toLocaleDateString()}</p>
+      <p><strong>Data</strong>{new Date(evento.diaEvento).toLocaleDateString()}</p>
       <p><strong>Horário</strong>{new Date(evento.horarioInicio).toLocaleTimeString()} - {new Date(evento.horarioTermino).toLocaleTimeString()}</p>
       <p><strong>Capacidade</strong>{evento.capacidadeMaxima}</p>
       <p><strong>Status</strong>{formalizarStatus(evento.status)}</p>

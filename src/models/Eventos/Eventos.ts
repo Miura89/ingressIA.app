@@ -4,7 +4,7 @@ export interface Evento {
     nome: string;
     descricao: string;
     local: string;
-    dia: string;
+    diaEvento: string;
     horarioInicio: string;
     horarioTermino: string;
     bannerImagem: string;

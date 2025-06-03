@@ -96,3 +96,17 @@ h1{
   outline: none;
   background: #fff;
 }
+
+.container-btn-table-eventos{
+    display: flex;
+    gap: 13px;
+    align-items: center;
+    padding: 8px;
+    justify-content: space-evenly;
+    background-color: #F3F4F6;
+}
+
+.selected{
+  background-color: #e5e7eb; 
+  color: #1e1e2f;
+}

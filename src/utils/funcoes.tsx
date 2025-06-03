@@ -41,3 +41,12 @@ export default function formalizarStatus(status: boolean)
         else
             return <XCircle color="#e3342f"/>
     }
+export function formalizarGenero(genero: number)
+{
+  if(genero == 0)
+    return "Masculino"
+  if(genero == 1)
+    return "Feminino"
+  else
+    return "Unisex"
+}
